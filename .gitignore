@@ -1,0 +1,25 @@
+
+# Terraform directories & cache
+.terraform/
+.terraform.lock.hcl
+
+# State files (sensitive information)
+terraform.tfstate
+terraform.tfstate.backup
+
+# Terraform Plan Outputs (not needed in version control)
+*.tfplan
+
+# Local logs & temp files
+*.log
+*.tmp
+
+# Private SSH keys (DO NOT commit these!)
+*.pem
+*.key
+
+# Ignore large provider binaries
+terraform-provider-*
+
+# VS Code settings (if using it)
+.vscode/
