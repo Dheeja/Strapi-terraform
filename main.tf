@@ -93,6 +93,14 @@ resource "aws_instance" "strapi" {
   vpc_security_group_ids      = [aws_security_group.strapi_sg.id]
   key_name                    = aws_key_pair.strapi_key.key_name
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "StrapiServer"
+  }
+
 user_data = <<-EOF
               #!/bin/bash
               set -e
@@ -131,9 +139,7 @@ user_data = <<-EOF
               sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
               EOF     
 
-  tags = {
-    Name = "StrapiServer"
-  }
+
 }
 
 output "public_ip" {
