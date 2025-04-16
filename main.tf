@@ -93,7 +93,8 @@ resource "aws_instance" "strapi" {
 
   user_data = <<-EOF
               #!/bin/bash
-              sudo apt-get update -y
+              set -e
+        sudo apt-get update -y
               sudo apt-get install -y nodejs npm git
               sudo npm install -g pm2 npx
               mkdir -p /srv/strapi
@@ -103,7 +104,10 @@ resource "aws_instance" "strapi" {
               npm install
               npm run build
               pm2 start "npm run develop" --name strapi
-              EOF
+              pm2 save
+              pm2 startup systemd
+              sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+              EOF      
 
   tags = {
     Name = "StrapiServer"
