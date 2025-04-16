@@ -91,23 +91,43 @@ resource "aws_instance" "strapi" {
   vpc_security_group_ids      = [aws_security_group.strapi_sg.id]
   key_name                    = aws_key_pair.strapi_key.key_name
 
-  user_data = <<-EOF
+user_data = <<-EOF
               #!/bin/bash
               set -e
-        sudo apt-get update -y
+
+              # Log everything
+              exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+
+              # Install dependencies
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get update -y
               sudo apt-get install -y nodejs npm git
+
+              # Install global npm tools
               sudo npm install -g pm2 npx
+
+              # Create Strapi app directory
               mkdir -p /srv/strapi
               cd /srv/strapi
+
+              # Create a new Strapi app
               npx create-strapi-app my-project --quickstart --no-run
+
               cd my-project
+
+              # Install project dependencies
               npm install
+
+              # Build the admin panel
               npm run build
+
+              # Start the Strapi app with PM2
               pm2 start "npm run develop" --name strapi
               pm2 save
-              pm2 startup systemd
+
+              # Set up PM2 to run on startup
               sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
-              EOF      
+              EOF     
 
   tags = {
     Name = "StrapiServer"
