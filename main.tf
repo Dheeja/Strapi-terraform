@@ -82,10 +82,7 @@ resource "aws_security_group" "strapi_sg" {
   }
 }
 
-resource "aws_key_pair" "strapi_key" {
-  key_name   = "JDstrapi-key-new" # <- change the name
-  public_key = file("${path.module}/JDstrapi-key.pem.pub")
-}
+
 
 # Launch EC2 instance
 resource "aws_instance" "strapi" {
