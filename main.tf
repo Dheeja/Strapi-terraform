@@ -122,7 +122,7 @@ user_data = <<-EOF
               npm run build
 
               # Start the Strapi app with PM2
-              pm2 start "npm run develop" --name strapi
+              pm2 start "npm run develop -- --host=0.0.0.0" --name strapi
               pm2 save
 
               # Set up PM2 to run on startup
