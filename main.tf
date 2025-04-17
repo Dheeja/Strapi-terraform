@@ -98,45 +98,45 @@ resource "aws_instance" "strapi" {
   tags = {
     Name = "StrapiServer"
   }
-
-  user_data = <<-EOF
+user_data = <<-EOF
               #!/bin/bash
               set -e
 
-              # Log everything
-              exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+              # Log all output
+              exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
 
-              # Install dependencies
-              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              # Install Node.js and dependencies
+              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
               sudo yum update -y
-              sudo yum install -y nodejs npm git
+              sudo yum install -y nodejs git gcc-c++ make python3
 
-              # Install global npm tools
+              # Install global npm packages
               sudo npm install -g pm2 npx
 
-              # Create Strapi app directory
+              # Create application directory
               mkdir -p /srv/strapi
               cd /srv/strapi
 
-              # Create a new Strapi app
-              npx create-strapi-app my-project --quickstart --no-run
+              # Create a new Strapi project (skip quickstart db and avoid prompt)
+              npx create-strapi-app my-project --quickstart --no-run --yes
 
               cd my-project
 
-              # Install project dependencies
-              npm install
+              # Install dependencies and build admin panel
 
-              # Build the admin panel
+              npm install
+              
               npm run build
 
-              # Start the Strapi app with PM2
+              # Start the app using PM2
               pm2 start "npm run develop -- --host=0.0.0.0" --name strapi
 
-
-              # Set up PM2 to run on startup
-              sudo pm2 startup amazon-linux -u ec2-user --hp /home/ec2-user
+              # Set PM2 to start on boot
+              pm2 startup systemd -u ec2-user --hp /home/ec2-user
               pm2 save
-              EOF
+              chown -R ec2-user:ec2-user /srv/strapi
+EOF
+
 }
 
 output "public_ip" {
