@@ -108,8 +108,8 @@ resource "aws_instance" "strapi" {
 
               # Install dependencies
               curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-              sudo apt-get update -y
-              sudo apt-get install -y nodejs npm git
+              sudo yum update -y
+              sudo yum install -y nodejs npm git
 
               # Install global npm tools
               sudo npm install -g pm2 npx
@@ -131,10 +131,11 @@ resource "aws_instance" "strapi" {
 
               # Start the Strapi app with PM2
               pm2 start "npm run develop -- --host=0.0.0.0" --name strapi
-              pm2 save
+
 
               # Set up PM2 to run on startup
-              sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+              sudo pm2 startup amazon-linux -u ec2-user --hp /home/ec2-user
+              pm2 save
               EOF
 }
 
