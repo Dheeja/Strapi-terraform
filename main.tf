@@ -84,7 +84,7 @@ resource "aws_security_group" "strapi_sg" {
  
 # Launch EC2 instance
 resource "aws_instance" "strapi" {
-  ami                         = "ami-00a929b66ed6e0de6" # Ubuntu 22.04 (check region)
+  ami                         = "ami-00a929b66ed6e0de6" # Amazon Linux 2 AMI (HVM), SSD Volume Type
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.public.id
   associate_public_ip_address = true
@@ -98,44 +98,33 @@ resource "aws_instance" "strapi" {
   tags = {
     Name = "StrapiServer"
   }
+
 user_data = <<-EOF
-              #!/bin/bash
-              set -e
+  #!/bin/bash
+  exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
+  set -e
 
-              # Log all output
-              exec > >(tee /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
+  yum update -y
+  curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+  yum install -y nodejs git gcc-c++ make python3
 
-              # Install Node.js and dependencies
-              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-              sudo yum update -y
-              sudo yum install -y nodejs git gcc-c++ make python3
+  npm install -g pm2 npx
 
-              # Install global npm packages
-              sudo npm install -g pm2 npx
+  mkdir -p /home/ec2-user/strapi
+  chown ec2-user:ec2-user /home/ec2-user/strapi
 
-              # Create application directory
-              mkdir -p /srv/strapi
-              cd /srv/strapi
-
-              # Create a new Strapi project (skip quickstart db and avoid prompt)
-              npx create-strapi-app my-project --quickstart --no-run --yes
-
-              cd my-project
-
-              # Install dependencies and build admin panel
-
-              npm install
-              
-              npm run build
-
-              # Start the app using PM2
-              pm2 start "npm run develop -- --host=0.0.0.0" --name strapi
-
-              # Set PM2 to start on boot
-              pm2 startup systemd -u ec2-user --hp /home/ec2-user
-              pm2 save
-              chown -R ec2-user:ec2-user /srv/strapi
+  su - ec2-user -c "
+    cd /home/ec2-user/strapi
+    npx create-strapi-app my-project --quickstart --no-run --yes
+    cd my-project
+    npm install
+    npm run build
+    pm2 start 'npm run develop -- --host=0.0.0.0' --name strapi
+    pm2 startup systemd
+    pm2 save
+  "
 EOF
+
 
 }
 
