@@ -81,9 +81,7 @@ resource "aws_security_group" "strapi_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-
-
+ 
 # Launch EC2 instance
 resource "aws_instance" "strapi" {
   ami                         = "ami-00a929b66ed6e0de6" # Ubuntu 22.04 (check region)
@@ -101,7 +99,7 @@ resource "aws_instance" "strapi" {
     Name = "StrapiServer"
   }
 
-user_data = <<-EOF
+  user_data = <<-EOF
               #!/bin/bash
               set -e
 
@@ -137,9 +135,7 @@ user_data = <<-EOF
 
               # Set up PM2 to run on startup
               sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
-              EOF     
-
-
+              EOF
 }
 
 output "public_ip" {
